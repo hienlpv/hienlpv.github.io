@@ -212,3 +212,8 @@ footer{text-align:center;color:var(--muted);font-size:0.78rem;margin-top:40px;}
 .rq-vi-btn.active{background:var(--accent);color:#fff;border-color:var(--accent);}
 .rq-vi-box{display:none;margin-top:6px;padding:8px 10px;border-radius:0 6px 6px 0;border-left:3px solid var(--accent);background:var(--highlight);color:var(--ink);font-size:0.85em;line-height:1.5;}
 .rq-vi-box.show{display:block;}
+
+.backup-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:10px;}
+.backup-btn{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer;}
+.backup-btn:hover{border-color:var(--accent);}
+.backup-status{font-size:0.84rem;color:var(--muted);}

@@ -474,6 +474,54 @@
     });
   }
 
+  // Export / import all saved progress as a JSON file (backup, or move to another device).
+  function initBackup(){
+    var exportBtn = document.getElementById('exportProgress');
+    var importBtn = document.getElementById('importProgress');
+    var fileInput = document.getElementById('importProgressFile');
+    var status = document.getElementById('backupStatus');
+    if(!exportBtn || !importBtn || !fileInput || !status) return;
+
+    exportBtn.addEventListener('click', function(){
+      var payload = ccafStore.exportAll();
+      var sections = Object.keys(payload.data).length;
+      if(!sections){ status.textContent = 'Nothing to export yet — no progress saved in this browser.'; return; }
+      var url = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'}));
+      var a = document.createElement('a');
+      a.href = url;
+      var d = new Date();
+      var pad = function(n){ return (n < 10 ? '0' : '') + n; };
+      a.download = 'cca-f-progress-' + d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + '.json';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+      status.textContent = 'Exported ' + sections + ' section(s).';
+    });
+
+    importBtn.addEventListener('click', function(){ fileInput.click(); });
+
+    fileInput.addEventListener('change', function(){
+      var file = fileInput.files[0];
+      fileInput.value = '';
+      if(!file) return;
+      if(file.size > 5 * 1024 * 1024){ status.textContent = 'That file is too large to be a progress export.'; return; }
+      var reader = new FileReader();
+      reader.onload = function(){
+        var payload = null;
+        try{ payload = JSON.parse(reader.result); }catch(e){}
+        if(!payload || payload.app !== 'cca-f'){ status.textContent = 'Not a CCA-F progress file.'; return; }
+        if(!window.confirm('Import this file? It replaces the progress saved in this browser for the parts it contains.')) return;
+        var count = ccafStore.importAll(payload);
+        if(count < 1){ status.textContent = 'The file contains no usable progress.'; return; }
+        status.textContent = 'Imported ' + count + ' section(s). Reloading…';
+        setTimeout(function(){ location.reload(); }, 700);
+      };
+      reader.onerror = function(){ status.textContent = 'Could not read that file.'; };
+      reader.readAsText(file);
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', function(){
     document.querySelectorAll('.glossary-zone').forEach(function(el){ wrapTerms(el); });
 
@@ -481,5 +529,6 @@
     wireTermTooltips();
     initTabs();
     initChecklist();
+    initBackup();
   });
 })();

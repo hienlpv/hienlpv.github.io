@@ -1011,6 +1011,15 @@
     <li class="glossary-zone"><input type="checkbox"> Reviewed every concept you got wrong across the 3 quiz files. <span class="vi-icon" data-vi="Đã ôn lại riêng các khái niệm từng làm sai trong 3 file quiz.">VI</span></li>
   </ul>
 
+  <h2 class="section-title">💾 Back Up Your Progress</h2>
+  <p>Progress is saved in this browser only. Export it to a file to keep a backup or move it to another device, then import that file there. Importing replaces the saved progress for the parts contained in the file.</p>
+  <div class="backup-row">
+    <button type="button" class="backup-btn" id="exportProgress">⬇ Export progress</button>
+    <button type="button" class="backup-btn" id="importProgress">⬆ Import progress</button>
+    <input type="file" id="importProgressFile" accept="application/json,.json" hidden>
+    <span class="backup-status" id="backupStatus" role="status"></span>
+  </div>
+
   <h2 class="section-title">📁 Files You Already Have for Practice</h2>
   <div class="files-list">
     <div class="glossary-zone"><a href="docs/CCA_Foundations_Study_Guide.pdf">docs/CCA_Foundations_Study_Guide.pdf</a> — the original 77-question bank with full explanations by domain (the source of this lecture). <span class="vi-icon" data-vi="Ngân hàng gốc 77 câu hỏi kèm giải thích đầy đủ theo domain (nguồn của bài giảng này).">VI</span></div>
