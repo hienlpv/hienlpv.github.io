@@ -480,7 +480,50 @@
     var importBtn = document.getElementById('importProgress');
     var fileInput = document.getElementById('importProgressFile');
     var status = document.getElementById('backupStatus');
-    if(!exportBtn || !importBtn || !fileInput || !status) return;
+    var copyBtn = document.getElementById('copyProgress');
+    var pasteBtn = document.getElementById('importPasted');
+    var textBox = document.getElementById('progressText');
+    if(!exportBtn || !importBtn || !fileInput || !status || !copyBtn || !pasteBtn || !textBox) return;
+
+    // Shared by file import and paste import.
+    function importFromText(text){
+      var payload = null;
+      try{ payload = JSON.parse(text); }catch(e){}
+      if(!payload || payload.app !== 'cca-f'){ status.textContent = 'Not CCA-F progress data.'; return; }
+      if(!window.confirm('Import this progress? It replaces the progress saved in this browser for the parts it contains.')) return;
+      var count = ccafStore.importAll(payload);
+      if(count < 1){ status.textContent = 'The data contains no usable progress.'; return; }
+      status.textContent = 'Imported ' + count + ' section(s). Reloading…';
+      setTimeout(function(){ location.reload(); }, 700);
+    }
+
+    copyBtn.addEventListener('click', function(){
+      var payload = ccafStore.exportAll();
+      var sections = Object.keys(payload.data).length;
+      if(!sections){ status.textContent = 'Nothing to copy yet — no progress saved in this browser.'; return; }
+      var text = JSON.stringify(payload);
+      textBox.value = text;
+      function manualCopy(){
+        textBox.focus();
+        textBox.select();
+        var ok = false;
+        try{ ok = document.execCommand('copy'); }catch(e){}
+        status.textContent = ok ? 'Copied ' + sections + ' section(s) to the clipboard.' : 'Select the text above and press Ctrl+C to copy it.';
+      }
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(function(){
+          status.textContent = 'Copied ' + sections + ' section(s) to the clipboard.';
+        }, manualCopy);
+      } else {
+        manualCopy();
+      }
+    });
+
+    pasteBtn.addEventListener('click', function(){
+      var text = textBox.value.trim();
+      if(!text){ status.textContent = 'Paste the progress JSON into the box first.'; return; }
+      importFromText(text);
+    });
 
     exportBtn.addEventListener('click', function(){
       var payload = ccafStore.exportAll();
@@ -507,16 +550,7 @@
       if(!file) return;
       if(file.size > 5 * 1024 * 1024){ status.textContent = 'That file is too large to be a progress export.'; return; }
       var reader = new FileReader();
-      reader.onload = function(){
-        var payload = null;
-        try{ payload = JSON.parse(reader.result); }catch(e){}
-        if(!payload || payload.app !== 'cca-f'){ status.textContent = 'Not a CCA-F progress file.'; return; }
-        if(!window.confirm('Import this file? It replaces the progress saved in this browser for the parts it contains.')) return;
-        var count = ccafStore.importAll(payload);
-        if(count < 1){ status.textContent = 'The file contains no usable progress.'; return; }
-        status.textContent = 'Imported ' + count + ' section(s). Reloading…';
-        setTimeout(function(){ location.reload(); }, 700);
-      };
+      reader.onload = function(){ importFromText(reader.result); };
       reader.onerror = function(){ status.textContent = 'Could not read that file.'; };
       reader.readAsText(file);
     });

@@ -1020,6 +1020,15 @@
     <span class="backup-status" id="backupStatus" role="status"></span>
   </div>
 
+  <details class="backup-paste">
+    <summary>Copy / paste instead of a file</summary>
+    <textarea id="progressText" rows="5" spellcheck="false" placeholder="Click “Copy progress” to fill this box with your progress, or paste progress JSON here and click “Import pasted JSON”."></textarea>
+    <div class="backup-row">
+      <button type="button" class="backup-btn" id="copyProgress">📋 Copy progress</button>
+      <button type="button" class="backup-btn" id="importPasted">⬆ Import pasted JSON</button>
+    </div>
+  </details>
+
   <h2 class="section-title">📁 Files You Already Have for Practice</h2>
   <div class="files-list">
     <div class="glossary-zone"><a href="docs/CCA_Foundations_Study_Guide.pdf">docs/CCA_Foundations_Study_Guide.pdf</a> — the original 77-question bank with full explanations by domain (the source of this lecture). <span class="vi-icon" data-vi="Ngân hàng gốc 77 câu hỏi kèm giải thích đầy đủ theo domain (nguồn của bài giảng này).">VI</span></div>
