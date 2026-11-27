@@ -354,6 +354,19 @@
     font-weight:700;
   }
 
+  .qmap{ margin:14px 0 0; border:1px solid var(--line); border-radius:10px; background:var(--card); }
+  .qmap summary{ cursor:pointer; padding:12px 14px; font-size:0.85rem; font-weight:700; }
+  .qmap[open] summary{ border-bottom:1px solid var(--line); }
+  .qmap-row{ display:flex; flex-wrap:wrap; align-items:center; gap:8px; padding:10px 14px; font-size:0.85rem; color:var(--muted); }
+  .qmap-row input{ width:84px; padding:8px 10px; border:1px solid var(--line); border-radius:8px; background:var(--surface-2); color:var(--ink); font-size:16px; }
+  .qmap-row button{ border:1px solid var(--line); background:var(--card); color:var(--ink); padding:8px 18px; border-radius:9px; font-weight:700; cursor:pointer; }
+  .qmap-msg{ color:var(--red); font-size:0.8rem; }
+  .qmap-grid{ position:relative; display:grid; grid-template-columns:repeat(auto-fill,minmax(44px,1fr)); gap:6px; padding:0 14px 14px; max-height:220px; overflow-y:auto; }
+  .qmap-cell{ min-height:40px; border:1px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink); font-size:0.8rem; font-weight:700; cursor:pointer; }
+  .qmap-cell.picked{ background:var(--tag-pending-bg); border-color:var(--accent); }
+  .qmap-cell.correct{ background:var(--green-bg); border-color:var(--green); color:var(--green); }
+  .qmap-cell.wrong{ background:var(--red-bg); border-color:var(--red); color:var(--red); }
+
   .qcard.deep-link-highlight{
     box-shadow:0 0 0 3px var(--accent);
     animation:deepLinkPulse 2.5s ease;
@@ -814,6 +827,10 @@
     .header-actions{ margin-left:0; }
     .stat{ font-size:0.78rem; }
     .reset{ padding:7px 11px; font-size:0.78rem; }
+    body{ overflow-x:hidden; }                       /* the full-bleed header margin overflows by a few px next to a scrollbar */
+    .header-actions{ flex-wrap:wrap; flex-shrink:1; }  /* Submit / Reset / Filters / theme pill wrap instead of being cut off */
+    .qtext{ flex:1 1 100%; }                          /* give the question the full width; Copy drops below it */
+    .qcard{ padding:14px 12px 12px; }
   }
 </style>
 </head>
@@ -857,6 +874,16 @@
 
 <div class="wrap">
   <div id="reportSummary" style="display:none;"></div>
+  <details class="qmap" id="qmap">
+    <summary>&#9776; Question map &amp; jump to question</summary>
+    <div class="qmap-row">
+      <label for="qmapInput">Go to Q#</label>
+      <input type="number" id="qmapInput" min="1" inputmode="numeric">
+      <button type="button" id="qmapGo">Go</button>
+      <span class="qmap-msg" id="qmapMsg" role="status"></span>
+    </div>
+    <div class="qmap-grid" id="qmapGrid"></div>
+  </details>
   <div class="pagebar" id="pagebarTop"></div>
   <div id="quizContainer"></div>
   <div class="pagebar" id="pagebarBottom"></div>
@@ -1414,6 +1441,53 @@ function updateScorebar(){
   }
 }
 
+// Jump straight to a question by its number in the current list (the Q# shown on each card).
+function goToQuestion(pos){
+  if(!(pos >= 1 && pos <= currentTotal())) return false;
+  state.currentPage = Math.ceil(pos / PAGE_SIZE);
+  render();
+  const q = state.order[pos - 1];
+  const el = document.querySelector('[data-qid="' + q.id + '"]');
+  if(el){
+    el.scrollIntoView({behavior:'smooth', block:'start'});
+    el.classList.add('deep-link-highlight');
+    setTimeout(() => el.classList.remove('deep-link-highlight'), 2500);
+  }
+  return true;
+}
+
+function renderMap(){
+  const grid = document.getElementById('qmapGrid');
+  const keepScroll = grid.scrollTop;
+  grid.innerHTML = '';
+  state.order.forEach((q, i) => {
+    const cell = document.createElement('button');
+    cell.type = 'button';
+    cell.className = 'qmap-cell';
+    let status = 'unanswered';
+    if(state.submitted){
+      const a = state.answers[q.id];
+      status = a && a.correct ? 'correct' : 'wrong';
+      cell.classList.add(status);
+    } else if(state.selections[q.id]){
+      status = 'answered';
+      cell.classList.add('picked');
+    }
+    cell.textContent = i + 1;
+    cell.title = 'Q' + (i + 1) + ' (' + status + ')';
+    cell.addEventListener('click', () => goToQuestion(i + 1));
+    grid.appendChild(cell);
+  });
+  grid.scrollTop = keepScroll;
+}
+
+function qmapGoFromInput(){
+  const n = parseInt(document.getElementById('qmapInput').value, 10);
+  const msg = document.getElementById('qmapMsg');
+  if(goToQuestion(n)) msg.textContent = '';
+  else msg.textContent = isNaN(n) ? 'Enter a question number.' : 'Enter a number between 1 and ' + currentTotal() + '.';
+}
+
 function render(){
   renderFilterChips();
   renderDomainStats();
@@ -1421,6 +1495,7 @@ function render(){
   renderQuestions();
   renderPagebar('pagebarBottom');
   updateScorebar();
+  renderMap();
   saveExam();
 }
 
@@ -1495,6 +1570,9 @@ document.getElementById('detailsToggle').addEventListener('click', (e) => {
     btn.setAttribute('aria-expanded', 'false');
   }
 });
+
+document.getElementById('qmapGo').addEventListener('click', qmapGoFromInput);
+document.getElementById('qmapInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') qmapGoFromInput(); });
 
 if(!restoreExam()) initExam();
 

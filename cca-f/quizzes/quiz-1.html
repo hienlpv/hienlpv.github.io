@@ -463,6 +463,75 @@
   .hint-block .vi-btn { margin: 10px 0 0; }
   .hint-block .vi-box { margin: 8px 0 0; }
 
+  /* Jump to any question */
+  .jump-panel {
+    margin: 14px 0 6px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--panel-3);
+  }
+  .jump-panel summary {
+    cursor: pointer;
+    padding: 12px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .jump-panel[open] summary { border-bottom: 1px solid var(--border); }
+  .jump-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .jump-row input,
+  .range-row input#open-input {
+    width: 84px;
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 16px; /* 16px keeps iOS from zooming the page on focus */
+  }
+  .jump-row .btn-flat,
+  .range-row .btn-flat { padding: 8px 18px; }
+  .jump-msg { color: var(--red); font-size: 12px; }
+  .jump-grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(44px, 1fr));
+    gap: 6px;
+    padding: 0 12px 12px;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+  .jump-cell {
+    min-height: 40px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .jump-cell.correct { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+  .jump-cell.wrong { background: var(--red-bg); border-color: var(--red); color: var(--red); }
+  .jump-cell.current { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .range-row { flex-wrap: wrap; }
+  @media (max-width: 560px) {
+    /* theme pill sat on top of the kicker line on narrow screens */
+    .theme-toggle-pill { position: static; display: inline-flex; margin-bottom: 12px; }
+    #start-screen .stats { gap: 8px; }
+    .stat-box { min-width: 0; padding: 12px 6px; }
+    .nav-row { flex-wrap: wrap; }
+    .nav-row button { flex: 1 1 40%; white-space: nowrap; }
+    .nav-row #quit-btn { order: 3; flex-basis: 100%; }
+  }
+
   .nav-row {
     display: flex;
     gap: 10px;
@@ -618,6 +687,13 @@
       <input type="number" id="range-end" min="1" value="20">
     </div>
 
+    <div class="range-row" id="open-row">
+      <span>Open question #</span>
+      <input type="number" id="open-input" min="1" value="1" inputmode="numeric">
+      <button type="button" class="btn-flat" id="open-btn">Open</button>
+      <span class="jump-msg" id="open-msg" role="status"></span>
+    </div>
+
     <button class="primary-btn" id="start-btn">Start Quiz</button>
   </div>
 
@@ -636,6 +712,17 @@
         <span>Wrong: <span class="wrong" id="score-wrong">0</span></span>
       </div>
     </div>
+
+    <details class="jump-panel" id="jump-panel">
+      <summary>&#9776; Jump to question</summary>
+      <div class="jump-row">
+        <label for="jump-input">Go to #</label>
+        <input type="number" id="jump-input" min="1" inputmode="numeric">
+        <button type="button" class="btn-flat" id="jump-go">Go</button>
+        <span class="jump-msg" id="jump-msg" role="status"></span>
+      </div>
+      <div class="jump-grid" id="jump-grid"></div>
+    </details>
 
     <div class="qnum-badge" id="qnum-badge">QUESTION 1</div>
     <p class="question-text" id="question-text"></p>
@@ -925,6 +1012,7 @@ const RAW_DATA = [{"id": 1, "question": "Your pipeline reviews every PR using a 
 
     updateProgress();
     saveProgress('quiz');
+    renderNavigator();
   }
 
   function selectOption(letter) {
@@ -1071,6 +1159,79 @@ const RAW_DATA = [{"id": 1, "question": "Your pipeline reviews every PR using a 
     list.style.flexDirection = 'column';
     this.textContent = isHidden ? 'Hide Question Review' : 'Show Question Review';
   });
+
+  // --- Jump straight to any question ---------------------------------------------------
+  const jumpPanel = document.getElementById('jump-panel');
+  const jumpInput = document.getElementById('jump-input');
+  const jumpMsg = document.getElementById('jump-msg');
+  const jumpGrid = document.getElementById('jump-grid');
+  const openInput = document.getElementById('open-input');
+  const openMsg = document.getElementById('open-msg');
+  const maxNumber = Math.max.apply(null, ALL_QUESTIONS.map(q => q.number));
+  openInput.max = maxNumber;
+  jumpInput.max = maxNumber;
+
+  function goToIndex(idx) {
+    currentIndex = idx;
+    renderQuestion();
+    qnumBadge.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function renderNavigator() {
+    jumpGrid.innerHTML = '';
+    activeSet.forEach((q, idx) => {
+      const cell = document.createElement('button');
+      cell.type = 'button';
+      cell.className = 'jump-cell';
+      const a = answers[idx];
+      if (a) cell.classList.add(a.correct ? 'correct' : 'wrong');
+      if (idx === currentIndex) {
+        cell.classList.add('current');
+        cell.setAttribute('aria-current', 'true');
+      }
+      cell.textContent = q.number;
+      cell.title = 'Question ' + q.number + (a ? (a.correct ? ' (correct)' : ' (wrong)') : '');
+      cell.addEventListener('click', () => goToIndex(idx));
+      jumpGrid.appendChild(cell);
+    });
+    const cur = jumpGrid.querySelector('.current');
+    if (cur && jumpPanel.open) jumpGrid.scrollTop = cur.offsetTop - jumpGrid.clientHeight / 2;
+  }
+
+  function jumpToNumber() {
+    const n = parseInt(jumpInput.value, 10);
+    const idx = activeSet.findIndex(q => q.number === n);
+    if (idx === -1) {
+      jumpMsg.textContent = isNaN(n) ? 'Enter a question number.' : 'Question ' + n + ' is not in this quiz.';
+      return;
+    }
+    jumpMsg.textContent = '';
+    goToIndex(idx);
+  }
+  document.getElementById('jump-go').addEventListener('click', jumpToNumber);
+  jumpInput.addEventListener('keydown', e => { if (e.key === 'Enter') jumpToNumber(); });
+  jumpPanel.addEventListener('toggle', () => { if (jumpPanel.open) renderNavigator(); });
+
+  // Start screen: open the full bank at a chosen question.
+  function openQuestion() {
+    const n = parseInt(openInput.value, 10);
+    const idx = ALL_QUESTIONS.findIndex(q => q.number === n);
+    if (idx === -1) {
+      openMsg.textContent = isNaN(n) ? 'Enter a question number.' : 'Question ' + n + ' is not in this bank.';
+      return;
+    }
+    openMsg.textContent = '';
+    activeSet = ALL_QUESTIONS.slice();
+    currentIndex = idx;
+    answers = {};
+    persist = true;
+    startScreen.style.display = 'none';
+    resultsScreen.style.display = 'none';
+    quizScreen.style.display = 'block';
+    renderQuestion();
+  }
+  document.getElementById('open-btn').addEventListener('click', openQuestion);
+  openInput.addEventListener('keydown', e => { if (e.key === 'Enter') openQuestion(); });
 
   const restored = restoreProgress();
 
