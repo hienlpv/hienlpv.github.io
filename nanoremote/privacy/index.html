@@ -22,7 +22,7 @@
 <main>
   <nav><a href="vi/" hreflang="vi">Tiếng Việt</a></nav>
   <h1>Nano Remote — Privacy Policy</h1>
-  <p class="meta">Effective date: 17 October 2026</p>
+  <p class="meta">Effective date: 26 November 2026</p>
 
   <p>Nano Remote is an Android app that turns your phone into a remote control for your Android TV or Google TV. This policy explains what the app does with information. In short: the app has no account system and no server of its own, and what you do with your TV stays between your phone and your TV.</p>
 
@@ -31,7 +31,8 @@
   <ul>
     <li>the TVs you have paired (name and local network address);</li>
     <li>the security certificate and key the app generated to pair with your TV, kept in app storage and excluded from Android cloud backup, so that a restored backup cannot act as your phone;</li>
-    <li>your macros, the buttons you pinned to the remote, your language choice, and whether you own Nano Remote Pro.</li>
+    <li>your macros, the buttons you pinned to the remote, your language choice, and whether you own Nano Remote Pro;</li>
+    <li>a short log of the last connection events (about 200 lines, such as "connection to the TV closed" with the time and a few counts). It contains no IP addresses, TV names or codes, is used only by the Connection diagnostics screen and the reports in section 7, and is shared only if you choose to share it.</li>
   </ul>
   <p>Uninstalling the app, or clearing its data in Android settings, deletes all of this.</p>
 
@@ -55,7 +56,7 @@
     <li>You can also reset or limit your advertising ID in Android settings.</li>
   </ul>
 
-  <h2>7. Crash reports</h2>
+  <h2>7. Crash reports and connection reports</h2>
   <p>The app uses Sentry to receive a report when it crashes or hits an unexpected error, so that bugs can be found and fixed. A report contains technical details of the error only: the error message and where in the code it happened (a stack trace), the app version, the phone's model, manufacturer and Android version, and the time.</p>
   <ul>
     <li>The report does not include your IP address (Sentry is set not to store it), an account or user identifier, the name you gave your phone, screenshots, what was on the screen, or what you typed or tapped.</li>
@@ -63,11 +64,18 @@
     <li>Reports are processed by Sentry (Functional Software, Inc.) on our behalf and stored in its data centre in the European Union, for a limited period set by Sentry's plan and no longer than 90 days.</li>
     <li>Nothing is sent from builds used for development.</li>
   </ul>
+  <p>The app also sends a short anonymous <strong>connection report</strong> when it cannot keep a connection to your TV, or cannot find a TV on your network, so that problems on phones and TVs we do not own can be found and fixed. It goes to the same Sentry service and region as crash reports.</p>
+  <ul>
+    <li>A report contains: a short cause code (for example "the TV refused the connection"), how many attempts in a row failed and over how long, which stage of connecting it failed at, how long ago the TV last answered, how many days ago this phone paired with the TV, the counts from the network scan (how many devices were seen, usable and skipped, and why), the manufacturer, model and Android version of your phone, and the model name your TV announces about itself when pairing, such as "BRAVIA 4K UR3". If you renamed the TV on the TV itself, that is the name it announces.</li>
+    <li>A report never contains: IP addresses, the name you gave a TV in the app, Bluetooth or MAC addresses, the name or address of your Wi-Fi network or router, certificates or keys, pairing codes, or anything you typed or said. At most five automatic reports are sent per day from one phone.</li>
+    <li>You are in control. Automatic reports are on by default and can be turned off under Settings &rarr; "Send anonymous connection reports". The Connection diagnostics screen (Settings, or the Find your TV screen when no TV is found) runs checks only when you ask, and sends a report only when you tap "Send to developer", which works even with the automatic switch off.</li>
+    <li>The Connection diagnostics screen can also share the local log from section 1 as text, through Android's share sheet. Nothing is shared unless you do it.</li>
+  </ul>
 
   <h2>8. What the app does not do</h2>
   <ul>
     <li>No accounts, sign-in, or user profiles.</li>
-    <li>No analytics and no tracking of what you do in the app. Crash reports (section 7) are the only diagnostic data the app sends.</li>
+    <li>No analytics and no tracking of what you do in the app. Crash reports and anonymous connection reports (section 7) are the only diagnostic data the app sends.</li>
     <li>No sale of personal information, and no data sent to a Nano Remote server, because there is none.</li>
   </ul>
 
